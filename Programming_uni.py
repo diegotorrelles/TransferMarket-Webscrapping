@@ -53,7 +53,7 @@ print("antes de entrar en la pagina")
 
 driver.get("https://www.transfermarkt.es/")
 
-print("ANTES DE PILLAR EL ELEMENTPO")
+
 
 
 
@@ -86,4 +86,52 @@ print("-------------------------------------------------------")
 
 print("pasamos el click")
 
+print("ANTES DE PILLAR EL barra2")
+
+shadow_host = driver.find_element(By.CSS_SELECTOR, 'tm-subnavigation[controller="wettbewerb"][id="ES1"][season="2023"][section="wettbewerb"][style="display: block; margin: 0 5px;"')
+shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+element_inside_shadow_dom = shadow_root.find_element(By.CSS_SELECTOR, 'div').find_element(By.CSS_SELECTOR,"ul")
+
+todosLi = element_inside_shadow_dom.find_elements(By.CSS_SELECTOR,"li.svelte-e7ru94.arrow")
+
+
+
+
+
+#print(element_inside_shadow_dom[1].get_attribute("outerHTML"))
+#print(element_inside_shadow_dom.get_attribute("outerHTML"))
+
+print("-----------------------------------")
+print(f"ESTA ES LA LONGITUD {len(todosLi)}")
+
+'''
+for li in todosLi:
+    print(li.get_attribute("outerHTML"))
+'''
+#print(todosLi[2].get_attribute("outerHTML"))
+#print(todosLi.get_attribute("outerHTML"))  
+x=0
+while x <2:
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(1)
+    x = x +1
+
+liSolo = todosLi[2]
+clicValoresMercado = liSolo.find_element(By.CSS_SELECTOR,"a")
+
+time.sleep(2)
+clicValoresMercado.click()
+time.sleep(0.5)
+vistaGeneral = liSolo.find_element(By.CSS_SELECTOR,"dd").find_elements(By.CSS_SELECTOR,"li")
+elementoValoresClubes = vistaGeneral[1].find_element(By.CSS_SELECTOR,"a")
+elementoValoresClubes.click()
+#luBarra2 = todosLi[2].find_element(By.CSS_SELECTOR,"lu")  
+
+#print(clicValoresMercado.get_attribute("outerHTML"))  
+#print(clicValoresMercado.text)  
+   
+#listaProb = driver.find_element(By.CSS_SELECTOR,"ul.svelte-e7ru94")
+#print(listaProb.get_attribute("outerHTML"))
+
+print("pasamos el click")
 input("pulse para terminar")
