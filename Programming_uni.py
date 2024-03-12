@@ -94,23 +94,9 @@ element_inside_shadow_dom = shadow_root.find_element(By.CSS_SELECTOR, 'div').fin
 
 todosLi = element_inside_shadow_dom.find_elements(By.CSS_SELECTOR,"li.svelte-e7ru94.arrow")
 
-
-
-
-
-#print(element_inside_shadow_dom[1].get_attribute("outerHTML"))
-#print(element_inside_shadow_dom.get_attribute("outerHTML"))
-
-print("-----------------------------------")
-print(f"ESTA ES LA LONGITUD {len(todosLi)}")
-
-'''
-for li in todosLi:
-    print(li.get_attribute("outerHTML"))
-'''
 #print(todosLi[2].get_attribute("outerHTML"))
 #print(todosLi.get_attribute("outerHTML"))  
-x=0
+x=0  
 while x <2:
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(1)
@@ -125,13 +111,27 @@ time.sleep(0.5)
 vistaGeneral = liSolo.find_element(By.CSS_SELECTOR,"dd").find_elements(By.CSS_SELECTOR,"li")
 elementoValoresClubes = vistaGeneral[1].find_element(By.CSS_SELECTOR,"a")
 elementoValoresClubes.click()
-#luBarra2 = todosLi[2].find_element(By.CSS_SELECTOR,"lu")  
 
-#print(clicValoresMercado.get_attribute("outerHTML"))  
-#print(clicValoresMercado.text)  
-   
-#listaProb = driver.find_element(By.CSS_SELECTOR,"ul.svelte-e7ru94")
-#print(listaProb.get_attribute("outerHTML"))
+#driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-print("pasamos el click")
+elementos = driver.find_element(By.CSS_SELECTOR,"table.items").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
+
+barraFecha = driver.find_element(By.CSS_SELECTOR,"div.inline-select") 
+barraFecha.click()
+
+print(barraFecha.get_attribute("outerHTML")) 
+
+'''
+#OBTENER Y GUARDAR EQUIPOS 
+nombreEquipos = []
+valorEquipos = []
+x = 0
+while x<=2:
+    nombreEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.hauptlink a").text)
+    valorEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.rechts a").text)
+    x = x +1
+    #print(elemento.get_attribute("outerHTML"))   
+    #print(nombreEquipo.get_attribute("outerHTML"))  
+'''
+
 input("pulse para terminar")
