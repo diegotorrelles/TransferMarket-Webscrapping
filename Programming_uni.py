@@ -1,5 +1,7 @@
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+
 
 #driver de selenium
 from selenium import webdriver
@@ -17,6 +19,25 @@ import time
 import pickle #para guardar/cargar las cookies
 import os
 import sys
+import pandas as pd
+
+
+
+def generar_fechas():
+    fechas = []
+    fecha_actual = datetime(2010, 11, 1)  # Fecha de inicio
+    fecha_final = datetime(2024, 3, 1)  # Fecha final
+
+    while fecha_actual <= fecha_final:
+        fechas.append('"' + fecha_actual.strftime("%d/%m/%Y") + '"')
+        if fecha_actual.day == 1:
+            fecha_actual += timedelta(days=14)  # Aumentar 14 días si es el primer día del mes
+        else:
+            fecha_actual = datetime(fecha_actual.year if fecha_actual.month < 12 else fecha_actual.year + 1,
+                                    fecha_actual.month % 12 + 1,
+                                    1)  # Ir al primer día del siguiente mes
+    
+    return fechas
 
 driver_manager = ChromeDriverManager() #Añadiriamos log level para tener una terminal mas vacia
 
@@ -53,10 +74,6 @@ print("antes de entrar en la pagina")
 
 driver.get("https://www.transfermarkt.es/")
 
-
-
-
-
 iframe = driver.find_element(By.CSS_SELECTOR, "iframe#sp_message_iframe_1015264")
 
 driver.switch_to.frame(iframe)
@@ -79,14 +96,8 @@ valoresDeMercadoSpan = valoresBarra[2].find_element(By.CSS_SELECTOR,"span").clic
 elemento = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, "a.main-navbar__dropdown-link[href='/primera-division/marktwerte/wettbewerb/ES1']")))
 elemento.click()
 
-print("-------------------------------------------------------")
+
 #print(elementos[2].get_attribute("outerHTML"))
-
-
-
-print("pasamos el click")
-
-print("ANTES DE PILLAR EL barra2")
 
 shadow_host = driver.find_element(By.CSS_SELECTOR, 'tm-subnavigation[controller="wettbewerb"][id="ES1"][season="2023"][section="wettbewerb"][style="display: block; margin: 0 5px;"')
 shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
@@ -105,33 +116,130 @@ while x <2:
 liSolo = todosLi[2]
 clicValoresMercado = liSolo.find_element(By.CSS_SELECTOR,"a")
 
-time.sleep(2)
+#time.sleep(2)
 clicValoresMercado.click()
-time.sleep(0.5)
+#time.sleep(0.5)
 vistaGeneral = liSolo.find_element(By.CSS_SELECTOR,"dd").find_elements(By.CSS_SELECTOR,"li")
 elementoValoresClubes = vistaGeneral[1].find_element(By.CSS_SELECTOR,"a")
 elementoValoresClubes.click()
 
 #driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
+#Estos son todas las casillas donde estan los nombres,fecha y valor de cada club 
 elementos = driver.find_element(By.CSS_SELECTOR,"table.items").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
+  
 
-barraFecha = driver.find_element(By.CSS_SELECTOR,"div.inline-select") 
+print("-------------------------------------------------------")
+
+fijador = driver.find_element(By.CSS_SELECTOR, "h1.content-box-headline")
+driver.execute_script("arguments[0].scrollIntoView();",fijador)
+
+#barraFecha = driver.find_element(By.CSS_SELECTOR,"#selOBD_chzn")
+
+#barraFecha = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, "div.inline-select")))
+#barraFecha = driver.find_element(By.CSS_SELECTOR,"div.inline-select") 
+#barraFecha.click()
+
+fechas_generadas = generar_fechas()
+#''''
+barraFecha = driver.find_element(By.CSS_SELECTOR,"div.inline-select").find_element(By.CSS_SELECTOR,"div")
+barraFecha = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, "div.inline-select div")))  # Combine selectors directly
+
+todasLasFechas = barraFecha.find_elements(By.CSS_SELECTOR,"li")
+
+#print(barraFecha.get_attribute("outerHTML")) 
 barraFecha.click()
 
-print(barraFecha.get_attribute("outerHTML")) 
+time.sleep(1)
+
+#POSIBLE BORRAR
+ #'''   
+barraEscribir = driver.find_element(By.CSS_SELECTOR,"input[type='search'][autocomplete='off'][tabindex='0']")
+
+barraEscribir.send_keys(fechas_generadas[0].replace('"', ''))
+
+barraEscribir.send_keys(Keys.ENTER)
+
+time.sleep(1)
+botonMostar = driver.find_element(By.CSS_SELECTOR,"input[type='submit'].right.small.button")
+botonMostar.click()
+
+#'''
+
+
+
+print("\n\n")  
+print("-----------------------------------")
+#print(todasLasFechas[0].get_attribute("outerHTML")) 
+  
+#time.sleep(0.5)
+#'''
+
+elementos = driver.find_element(By.CSS_SELECTOR,"table.items").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
+#print(elementos[0].get_attribute("outerHTML")) 
+print("\n\n")  
+print("-----------------------------------")
+#fijador = driver.find_element(By.CSS_SELECTOR, "h1.content-box-headline")
+#driver.execute_script("arguments[0].scrollIntoView();",fijador)
+
+
+time.sleep(1)
+botonMostar = driver.find_element(By.CSS_SELECTOR,"input[type='submit'].right.small.button")
+botonMostar.click()
+df = pd.DataFrame(columns=['Nombre Equipo', 'Valor Equipo (en millones $)', 'Fecha'])
+x=0
+#while x <= len(fechas_generadas):
 
 '''
-#OBTENER Y GUARDAR EQUIPOS 
-nombreEquipos = []
-valorEquipos = []
-x = 0
-while x<=2:
-    nombreEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.hauptlink a").text)
-    valorEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.rechts a").text)
+while x <= 2:
+    barraEscribir = driver.find_element(By.CSS_SELECTOR,"input[type='search'][autocomplete='off'][tabindex='0']")
+    print(f"esta es la fecha que tiene que escribir {fechas_generadas[x]}")
+    barraEscribir.send_keys(fechas_generadas[x].replace('"', ''))
+    barraEscribir.send_keys(Keys.ENTER)
+
+    time.sleep(1)
+    botonMostar = driver.find_element(By.CSS_SELECTOR,"input[type='submit'].right.small.button")
+    botonMostar.click()
+
+    elementos = driver.find_element(By.CSS_SELECTOR,"table.items").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
+    wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, "tr td.hauptlink a")))
+    #nombreEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.hauptlink a").text)
+    #valorEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.rechts a").text)  
+    nombre = elementos[x].find_element(By.CSS_SELECTOR,"tr td.hauptlink a").text
+    valor = elementos[x].find_element(By.CSS_SELECTOR,"tr td.rechts a").text
+
+    df.loc[x] = [nombre,
+                 valor,
+                 fechas_generadas[x]]
+ 
     x = x +1
+'''
+    
+#'''
+x = 0
+#wait.until(ec.element_to_be_clickable((By.CSS_SELECTOR, "td.hauptlink a")))
+#print(elementos[x].find_element(By.CSS_SELECTOR,"td.hauptlink a").text)
+elementos = driver.find_element(By.CSS_SELECTOR,"table.items").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
+time.sleep(1)
+while x<=2:
+    wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, "tr td.hauptlink a")))
+    #nombreEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.hauptlink a").text)
+    #valorEquipos.append(elementos[x].find_element(By.CSS_SELECTOR,"td.rechts a").text)  
+    nombre = elementos[x].find_element(By.CSS_SELECTOR,"tr td.hauptlink a").text
+    valor = elementos[x].find_element(By.CSS_SELECTOR,"tr td.rechts a").text
+    df.loc[x] = [nombre,
+                 valor,
+                 fechas_generadas[0]]
+    
+    x = x +1
+
+    
     #print(elemento.get_attribute("outerHTML"))   
     #print(nombreEquipo.get_attribute("outerHTML"))  
-'''
+#'''
+print("---------------------------")
+print("\n\n")
 
-input("pulse para terminar")
+print(df)
+
+input("pulse para terminar")  
