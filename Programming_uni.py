@@ -53,7 +53,7 @@ options.add_argument("--disable-popup-blocking") #quita los pop ups creo
 options.add_argument("--disable-password-manager-reauthentication")
 options.add_argument("--accept-all-cookies")
 
-#options.add_argument("--headless") # con esto no te habre la ventana 
+options.add_argument("--headless") # con esto no te habre la ventana 
 
 #### PARAMETROS A OMITIR EN EL INICIO DE CHROMEDRIVER
 
@@ -65,12 +65,45 @@ exp_opt = [
 
 options.add_experimental_option("excludeSwitches",exp_opt)
 
+#### Clases a utilizar
+
+class JugadorFutbol:
+    def __init__(self, nombreCompleto: str, valorMercado: int, club: str):
+        self.nombreCompleto = nombreCompleto
+        self.valorMercado = valorMercado
+        self.club = club
+
+    def __str__(self):
+        return f"Nombre: {self.nombreCompleto}\nValor de mercado: {self.valorMercado}\nClub: {self.club}"
+
+class JugadorFutbolEdad:
+        def __init__(self, nombreCompleto: str, valorMercado: int, edad: int):
+            self.nombreCompleto = nombreCompleto
+            self.valorMercado = valorMercado
+            self.edad = edad
+
+        def __str__(self):
+            return f"Nombre: {self.nombreCompleto}\nValor de mercado: {self.valorMercado}\nEdad: {self.edad}"
+
+class JugadorFutbolHistoricos:
+            def __init__(self, nombreCompleto: str,pais: str, alineaciones: int, goles: int):
+                self.nombreCompleto = nombreCompleto
+                self.pais = pais
+                self.alineaciones = alineaciones
+                self.goles = goles
+
+            def __str__(self):
+                return f"Nombre: {self.nombreCompleto}\nPais: {self.pais}\nGoles: {self.goles}"
+
+#### Clases a utilizar
+
+### Conexion a la pagina ###
+
 service = Service(chromedriver_path)
 
 driver = webdriver.Chrome(service=service,options=options)
 wait = WebDriverWait(driver,30) # tiempo de espera hasta que el elemento este disponible
 
-#print("antes de entrar en la pagina")
 
 driver.get("https://www.transfermarkt.es/")
 
@@ -91,6 +124,7 @@ valoresBarra = barra.find_elements(By.CSS_SELECTOR,"li")
 elemento = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.XPATH, "//span[starts-with(@id, 'ASTAGQ_plc_close_')]")))     ### Para quitar la publi
 elemento.click()
 
+### Conexion a la pagina ###
 
 def valoresEquipos():
     valoresDeMercadoSpan = valoresBarra[2].find_element(By.CSS_SELECTOR,"span").click()         ### Click de Valores de Mercado
@@ -113,9 +147,8 @@ def valoresEquipos():
         x = x +1
 
     liSolo = todosLi[2]
+
     clicValoresMercado = liSolo.find_element(By.CSS_SELECTOR,"a")
-
-
     clicValoresMercado.click()
 
     vistaGeneral = liSolo.find_element(By.CSS_SELECTOR,"dd").find_elements(By.CSS_SELECTOR,"li")
@@ -156,9 +189,7 @@ def valoresEquipos():
             barraFecha.click()
             
             barraEscribir = driver.find_element(By.CSS_SELECTOR,"input[type='search'][autocomplete='off'][tabindex='0']")
-        
-           
-        
+
             barraEscribir.send_keys(fechas_generadas[i].replace('"', ''))
             barraEscribir.send_keys(Keys.ENTER)
         
@@ -199,8 +230,6 @@ def valoresEquipos():
         #24 es un año
         df.to_csv("valoresEquipo.csv", index=False, sep=',')
 
-
-
 def valoresJugadores():
     valoresDeMercadoSpan = valoresBarra[2].find_element(By.CSS_SELECTOR,"span").click()         ### Click de Valores de Mercado
 
@@ -211,15 +240,6 @@ def valoresJugadores():
     driver.execute_script("arguments[0].scrollIntoView();",fijador)
 
     tablaJugadores = driver.find_element(By.CSS_SELECTOR,"div.responsive-table").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
-
-    class JugadorFutbol:
-        def __init__(self, nombreCompleto: str, valorMercado: int, club: str):
-            self.nombreCompleto = nombreCompleto
-            self.valorMercado = valorMercado
-            self.club = club
-
-        def __str__(self):
-            return f"Nombre: {self.nombreCompleto}\nValor de mercado: {self.valorMercado}\nClub: {self.club}"
 
     jugadoresMadrid = 0
     jugadoresBarca = 0
@@ -292,7 +312,8 @@ def valoresJugadores():
         df.loc[contadorDF] = [futbolist.nombreCompleto,
                                 futbolist.valorMercado,
                                 futbolist.club
-                                ]     
+                                ]
+        #print(futbolist.club)     
         contadorDF = contadorDF + 1
 
     df.to_csv("valoresJugadores.csv", index=False, sep=',')
@@ -314,17 +335,6 @@ def valorJugadoresEdad():
     edad = tabla[3].find_element(By.CSS_SELECTOR,"a").click()
 
     time.sleep(5)
-
-
-    class JugadorFutbolEdad:
-            def __init__(self, nombreCompleto: str, valorMercado: int, edad: int):
-                self.nombreCompleto = nombreCompleto
-                self.valorMercado = valorMercado
-                self.edad = edad
-
-            def __str__(self):
-                return f"Nombre: {self.nombreCompleto}\nValor de mercado: {self.valorMercado}\nEdad: {self.edad}"
-
 
     jugadoresMadrid = 0
     jugadoresBarca = 0
@@ -391,5 +401,96 @@ def valorJugadoresEdad():
 
     df.to_csv("valoresJugadorEdad.csv", index=False, sep=',')
 
-input("pulse para terminar")    
+
+def jugadoresHistoricos():
+
+    valoresDeMercadoSpan = valoresBarra[2].find_element(By.CSS_SELECTOR,"span").click()         ### Click de Valores de Mercado
+
+    elemento = WebDriverWait(driver, 10).until(ec.element_to_be_clickable((By.CSS_SELECTOR, "a.main-navbar__dropdown-link[href='/primera-division/marktwerte/wettbewerb/ES1']")))
+    elemento.click()
+
+    fijador = driver.find_element(By.CSS_SELECTOR, "h1.content-box-headline")
+    driver.execute_script("arguments[0].scrollIntoView();",fijador)
+
+    shadow_host = driver.find_element(By.CSS_SELECTOR, 'tm-subnavigation[controller="wettbewerb"][id="ES1"][season="2023"][section="wettbewerb"][style="display: block; margin: 0 5px;"')
+    shadow_root = driver.execute_script("return arguments[0].shadowRoot", shadow_host)
+    element_inside_shadow_dom = shadow_root.find_element(By.CSS_SELECTOR, 'div').find_element(By.CSS_SELECTOR,"ul")
+
+    todosLi = element_inside_shadow_dom.find_elements(By.CSS_SELECTOR,"li.svelte-e7ru94.arrow")
+
+    liSolo = todosLi[6]
+    clicValoresMercado = liSolo.find_element(By.CSS_SELECTOR,"a")
+    clicValoresMercado.click()
+    time.sleep(0.5)
+    vistaGeneral = liSolo.find_elements(By.CSS_SELECTOR,"dd")[1].find_elements(By.CSS_SELECTOR,"li")
+    goleadoresTodos = vistaGeneral[2].find_element(By.CSS_SELECTOR,"a")
+    goleadoresTodos.click()
+
+    time.sleep(0.5)
+    fijador = driver.find_element(By.CSS_SELECTOR, "h1.content-box-headline")
+    driver.execute_script("arguments[0].scrollIntoView();",fijador)
+
+    x = 0
+    df = pd.DataFrame(columns=['Nombre Jugador', 'pais', 'alineaciones','goles'])
+    futbolistas = []
+
+
+    con=0
+
+    while con<=5:
+        paginas = driver.find_element(By.CSS_SELECTOR,"ul.tm-pagination").find_elements(By.CSS_SELECTOR,"li")
+
+        if con > 1:
+            pag = con + 2
+        else:
+            pag = con
+
+        pagina = paginas[pag]
+        
+        time.sleep(2)
+
+        pagina.find_element(By.CSS_SELECTOR,"a").click()
+
+        time.sleep(3)
+
+        i=0
+        x=0
+        while i<25:
+
+            
+
+            tablaJugadores = driver.find_element(By.CSS_SELECTOR,"div.responsive-table").find_element(By.CSS_SELECTOR,"tbody").find_elements(By.CSS_SELECTOR,"tr")
+
+            soccerPlayer = tablaJugadores[x].find_elements(By.CSS_SELECTOR,"td")
+
+
+            nombre = soccerPlayer[1].find_element(By.CSS_SELECTOR,"tr").find_elements(By.CSS_SELECTOR,"td")[1].find_element(By.CSS_SELECTOR,"a").text
+
+            pais = soccerPlayer[5].find_element(By.CSS_SELECTOR,"img").get_attribute("title")  #.find_element(By.CSS_SELECTOR,"td") .find_elements(By.CSS_SELECTOR,"img") #.get_attribute("title") 
+
+            alineaciones = soccerPlayer[7].find_element(By.CSS_SELECTOR,"a").text
+
+            goles = soccerPlayer[10].find_element(By.CSS_SELECTOR,"a").text
+
+            futbolista = JugadorFutbolHistoricos(nombre,pais,alineaciones,goles)
+            futbolistas.append(futbolista)
+
+            i = i +1 
+            x = x +3
+                
+            contadorDF = 0
+            for futbolist in futbolistas:
+
+                df.loc[contadorDF] = [futbolist.nombreCompleto,
+                                        futbolist.pais,
+                                        futbolist.alineaciones,
+                                        futbolist.goles
+                                        ]     
+                contadorDF = contadorDF + 1
+        con = con + 1
+
+    df.to_csv("jugadoresHistoricosGoles.csv", index=False, sep=',')
+
+
+ 
 
